@@ -71,6 +71,86 @@ public class Client {
     }
 
 
-    
+    private void allToLargest() throws ParserConfigurationException, IOException, SAXException {
+        String largestServerType = "";
+        File file = new File("./ds-system.xml");
+        //an instance of factory that gives a document builder
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        //an instance of builder to parse the specified xml file
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(file);
+        doc.getDocumentElement().normalize();
+
+        NodeList serverList = doc.getElementsByTagName("server");
+
+        Node tempNode = serverList.item(0);
+        Element tempElement = (Element) tempNode;
+        int largestCore = Integer.parseInt(tempElement.getAttribute("coreCount"));
+
+        for (int i = 0; i < serverList.getLength(); i++) {
+            Node currentNode = serverList.item(i);
+            if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element currentElement = (Element) currentNode;
+                int cores = Integer.parseInt(currentElement.getAttribute("coreCount"));
+                if (cores > largestCore) {
+                    largestCore = cores;
+                    largestServerType = currentElement.getAttribute("type");
+                }
+            }
+        }
+        largestServer = largestServerType;
+    }
+
+
+
+    public static void main(String[] args) {
+        try {
+            String name = System.getProperty("user.name");
+
+            Client client = new Client("127.0.0.1", 50000);
+            String cmd = "";
+
+            client.sendCmd("HELO");
+            cmd = client.getCmd();
+
+            client.sendCmd("AUTH " + name);
+            cmd = client.getCmd();
+
+            client.sendCmd("REDY");
+            cmd = client.getCmd();
+            client.allToLargest();
+
+            // Schedule job
+            while(!cmd.equals("NONE")) {
+                if (cmd.startsWith("JOBN") || cmd.startsWith("JOBP")) {
+                    cmd = res(client, cmd);
+                    client.sendCmd("SCHD " + jobID + " " + client.largestServer + " " + "0");
+                }
+                else if (cmd.startsWith("JCPL")){
+                    client.sendCmd("REDY");
+                }
+                else if (cmd.startsWith("RESF")){
+                    client.sendCmd("SCHD " + jobID + " " + client.largestServer + " " + "0");
+
+                    }
+                else if (cmd.startsWith("RESR")){
+                    client.sendCmd("SCHD " + jobID + " " + client.largestServer + " " + "0");
+
+                }
+                cmd = client.getCmd();
+                client.sendCmd("REDY");
+                cmd = client.getCmd();
+            }
+
+
+            client.sendCmd("QUIT");
+
+            client.input.close();
+            client.output.close();
+            client.socket.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
 
 }
