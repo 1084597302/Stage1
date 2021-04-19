@@ -9,6 +9,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.net.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class Client {
     private Socket socket = null;
@@ -25,7 +26,7 @@ public class Client {
 
     private void sendCmd(String cmd) throws IOException {
         byte[] commands = cmd.getBytes();
-        output.write(commands, 0, commands.length);
+        output.write(commands);
         output.flush();
     }
 
@@ -40,12 +41,25 @@ public class Client {
         return getCmd;
     }
 
+    //job attribute
     private static String submitTime = "";
     private static String jobID = "";
     private static String estRuntime = "";
     private static String core = "";
     private static String memory = "";
     private static String disk = "";
+
+    //server attribute
+    private static String serverType = "";
+    private static String serverID = "";
+    private static String serverState = "";
+    private static String curStartTime = "";
+    private static String serverCore = "";
+    private static String serverMemory = "";
+    private static String serverDisk = "";
+    private static String wJobs = "";
+    private static String rJobs = "";
+
 
 
     private static String res(Client client, String job) throws Exception {
@@ -65,7 +79,17 @@ public class Client {
         while (!cmd.equals(".")) {
             client.sendCmd("OK");
             cmd = client.getCmd();
-
+            //System.out.println(cmd);
+            //String[] readServer = cmd.split(" ");
+            //serverType = readServer[0];
+            //serverID = readServer[1];
+            //serverState = readServer[2];
+            //curStartTime = readServer[3];
+            //serverCore = readServer[4];
+            //serverMemory = readServer[5];
+            //serverDisk = readServer[6];
+            //wJobs = readServer[7];
+            //rJobs = readServer[8].replace("\n", "");
         }
         return cmd;
     }
@@ -129,14 +153,8 @@ public class Client {
                 else if (cmd.startsWith("JCPL")){
                     client.sendCmd("REDY");
                 }
-                else if (cmd.startsWith("RESF")){
-                    client.sendCmd("SCHD " + jobID + " " + client.largestServer + " " + "0");
 
-                    }
-                else if (cmd.startsWith("RESR")){
-                    client.sendCmd("SCHD " + jobID + " " + client.largestServer + " " + "0");
 
-                }
                 cmd = client.getCmd();
                 client.sendCmd("REDY");
                 cmd = client.getCmd();
